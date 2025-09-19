@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>File Info</title>
+  </head>
+  <body>
+    <h1>File Information</h1>
+    <ul>
+      <li><strong>File Name:</strong> <%= file.name %></li>
+      <li><strong>Size:</strong> <%= file.size %> bytes</li>
+      <li><strong>Owner:</strong> <%= file.owner.username %></li>
+      <li><strong>Uploaded At:</strong> <%= file.createdAt %></li>
+      <% if (file.sharableUntil) { %>
+      <li><strong>Sharable Until:</strong> <%= file.sharableUntil %></li>
+      <% } %>
+      <li><strong>Sharable:</strong> <%= file.sharable ? "Yes" : "No" %></li>
+    </ul>
+
+    <form action="/files/download/<%= file.id %>" method="post">
+      <button type="submit">Download</button>
+    </form>
+
+    <% if (user === file.userId) { %>
+    <form action="/files/edit/<%= file.id %>" method="get">
+      <button type="submit">Edit</button>
+    </form>
+    <% } %>
+    <a href="/userPage">Back to User Page</a>
+  </body>
+</html>
