@@ -4,16 +4,16 @@ const multer = require("multer");
 const path = require("path");
 const usersController = require("../controllers/usersController");
 
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "../uploads"));
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-const upload = multer({ storage });
+//// Configure multer storage
+//const storage = multer.diskStorage({
+//  destination: function (req, file, cb) {
+//    cb(null, path.join(__dirname, "../uploads"));
+//  },
+//  filename: function (req, file, cb) {
+//    cb(null, Date.now() + "-" + file.originalname);
+//  },
+//});
+const upload = multer({ storage: multer.memoryStorage() }); // memory storage for direct upload to Cloudinary
 
 const usersRouter = Router();
 

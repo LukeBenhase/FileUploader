@@ -1,6 +1,8 @@
 const passport = require("passport");
 const { PrismaClient } = require("../generated/prisma");
 const prisma = new PrismaClient();
+const cloudinary = require("cloudinary").v2;
+const fetch = require("node-fetch").default;
 
 async function getHomepage(req, res) {
   res.render("homePage");
@@ -75,18 +77,33 @@ async function createCard(req, res) {
   const sharable = req.body.isShareable === "on";
   const folderId = req.params.folderId || null;
 
-  await prisma.file.create({
-    data: {
-      fileURL: filePath,
-      name: fileName,
-      size: fileSize,
-      userId: userId,
-      sharable: sharable,
-      folderId: parseInt(folderId),
+  // Upload file to Cloudinary
+  const result = await cloudinary.uploader.upload_stream(
+    {
+      resource_type: "auto",
+      folder: "file_uploader",
     },
-  });
-
-  res.redirect("/userPage");
+    async (error, result) => {
+      if (error) {
+        console.error("Cloudinary upload error:", error);
+        return res.status(500).json({ message: "File upload failed" });
+      }
+      // File uploaded successfully
+      await prisma.file.create({
+        data: {
+          fileName: req.file.originalname,
+          fileURL: result.secure_url,
+          name: fileName,
+          size: fileSize,
+          userId: userId,
+          sharable: sharable,
+          folderId: parseInt(folderId),
+        },
+      });
+      res.redirect("/userPage");
+    }
+  );
+  result.end(req.file.buffer);
 }
 
 async function getFileInfo(req, res) {
@@ -208,8 +225,21 @@ async function downloadFile(req, res) {
         .json({ message: "File not found or not sharable" });
     }
   }
+  // download the file from cloudinary
+  // Fetch the file from Cloudinary
+  const response = await fetch(file.fileURL);
+  if (!response.ok) {
+    return res
+      .status(500)
+      .json({ message: "Failed to fetch file from Cloudinary" });
+  }
 
-  res.download(file.fileURL, file.name);
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="${file.fileName}"`
+  );
+  res.setHeader("Content-Type", response.headers.get("content-type"));
+  response.body.pipe(res);
 }
 
 async function createFolder(req, res) {

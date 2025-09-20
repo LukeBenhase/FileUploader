@@ -38,6 +38,7 @@ model Folder {
 model File {
   id        Int      @id @default(autoincrement())
   name      String
+  fileName  String?
   size      Int
   createdAt DateTime @default(now())
   fileURL   String?
